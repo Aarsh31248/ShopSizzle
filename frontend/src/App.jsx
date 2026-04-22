@@ -1,23 +1,34 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
 
 import HomePage from "./pages/HomePage";
 import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
+import AdminPage from "./pages/AdminPage";
+import LoadingSpinner from "./components/LoadingSpinner";
+import CategoryPage from "./pages/CategoryPage";
+import CartPage from "./pages/CartPage";
+import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
+import PurchaseCancelPage from "./pages/PurchaseCancelPage";
 
 import { Toaster } from "react-hot-toast";
 import { useUserStore } from "./stores/useUserStore";
-import LoadingSpinner from "./components/LoadingSpinner";
-import { useEffect } from "react";
+import { useCartStore } from "./stores/useCartStore";
 
 const App = () => {
 	const { user, checkAuth, checkingAuth } = useUserStore();
+  const { getCartItems } = useCartStore();
 
   useEffect(() => {
 		checkAuth();
 	}, [checkAuth]);
 
+  useEffect(() => {
+		if (!user) return;
 
+		getCartItems();
+	}, [getCartItems, user]);
 
   if (checkingAuth) return <LoadingSpinner />;
 
@@ -36,6 +47,17 @@ const App = () => {
           <Route path="/" element={<HomePage />} />
           <Route path='/signup' element={!user ? <SignUpPage /> : <Navigate to='/' />} />
 					<Route path='/login' element={!user ? <LoginPage /> : <Navigate to='/' />} />
+          <Route
+						path='/secret-dashboard'
+						element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
+					/>
+          <Route path='/category/:category' element={<CategoryPage />} />
+          <Route path='/cart' element={user ? <CartPage /> : <Navigate to='/login' />} />
+          <Route
+						path='/purchase-success'
+						element={user ? <PurchaseSuccessPage /> : <Navigate to='/login' />}
+					/>
+					<Route path='/purchase-cancel' element={user ? <PurchaseCancelPage /> : <Navigate to='/login' />} />
         </Routes>
       </div>
       <Toaster />
